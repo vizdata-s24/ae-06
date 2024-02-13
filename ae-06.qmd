@@ -1,0 +1,111 @@
+---
+title: "Annotation"
+format: 
+  html:
+    toc: true
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+# Setup
+
+```{r}
+#| label: load-packages
+#| message: false
+
+library(tidyverse)
+library(lubridate)
+library(colorspace)
+library(openintro)
+library(gghighlight)
+```
+
+# Part 1 - Labeling states
+
+```{r}
+ggplot(state_stats, aes(x = homeownership, y = pop2010)) + 
+  geom_text(aes(label = abbr))
+```
+
+# Part 2 - Another look at Durham AQI
+
+```{r}
+#| label: durham-aqi-prep
+#| message: false
+
+dch_2022 <- read_csv(here::here("data/durham-chapel-hill/ad_aqi_tracker_data-2022.csv"), na = c(".", ""))
+
+aqi_levels <- tribble(
+  ~aqi_min, ~aqi_max, ~color,    ~level,
+  0,        50,       "#D8EEDA", "Good",
+  51,       100,      "#F1E7D4", "Moderate",
+  101,      150,      "#F8E4D8", "Unhealthy for sensitive groups",
+  151,      200,      "#FEE2E1", "Unhealthy",
+  201,      300,      "#F4E3F7", "Very unhealthy",
+  301,      400,      "#F9D0D4", "Hazardous"
+) |>
+  mutate(aqi_mid = (aqi_min + aqi_max) / 2)
+
+dch_2022 <- dch_2022 |>
+  janitor::clean_names() |>
+  mutate(date = mdy(date))
+```
+
+Complete the plot below.
+
+```{r}
+#| label: durham-aqi-viz
+
+dch_2022 |>
+  ggplot(aes(x = date, y = aqi_value, group = 1)) +
+  geom_line() +
+  scale_x_date(
+    name = NULL, date_labels = "%b",
+    limits = c(ymd("2022-01-01"), ymd("2023-03-01"))
+  ) +
+  geom_text(
+    data = aqi_levels,
+    aes(x = ymd("2023-02-28"), y = aqi_mid, label = level, color = color),
+  ) +
+  annotate(
+    geom = "text",
+    x = c(ymd("2022-01-01"), ymd("2023-01-01")), y = -80,
+    label = c("2022", "2023"), size = 4
+  ) +
+  coord_cartesian(clip = "off", ylim = c(0, 400)) +
+  labs(
+    x = NULL, y = "AQI",
+    title = "Ozone and PM2.5 Daily AQI Values",
+    subtitle = "Durham-Chapel Hill, NC",
+    caption = "Source: EPA Daily Air Quality Tracker"
+  ) +
+  theme_minimal()
+```
+
+# Part 3 - Highlighting with gghighlight
+
+```{r}
+#| label: sf-data-prep
+#| message: false
+
+sf_files <- fs::dir_ls(here::here("data/san-francisco"))
+
+sf <- read_csv(sf_files, na = c(".", ""))
+
+sf <- sf |>
+  janitor::clean_names() |>
+  mutate(date = mdy(date)) |>
+  arrange(date) |>
+  select(date, aqi_value) |>
+  mutate(
+    year = year(date),
+    day_of_year = yday(date)
+  )
+```
+
+```{r}
+#| label: sf-data-viz
+
+# add code here
+```
